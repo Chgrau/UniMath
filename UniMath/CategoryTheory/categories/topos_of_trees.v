@@ -347,9 +347,8 @@ Proof.
     + induction m as [|m Hm].
       * simpl in Hn.
         simpl. rewrite (Hn f).
-        unfold functor_on_morphisms in *.
-        unfold compose.
-        simpl.
+        unfold functor_on_morphisms.
+
 
 
 
