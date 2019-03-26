@@ -307,57 +307,57 @@ End Adjunction.
 
 Section Fix.
 
-Definition terminal_topos_of_trees_map (A : topos_of_trees) : topos_of_trees⟦A,constant_PreShv unitHSET⟧.
-Proof.
-  use mk_nat_trans.
-  - intro X.
-    apply (TerminalArrow TerminalHSET).
-  - intros n m f.
-    apply idpath.
-Defined.
-
 Definition terminal_topos_of_trees : Terminal topos_of_trees :=
   (Terminal_functor_precat ω^op SET TerminalHSET has_homsets_HSET).
 
-Definition terminal_topos_of_trees_eq (X : HSET) (F : HSET⟦TerminalHSET,X⟧) :
-  TerminalArrow TerminalHSET unitHSET · F = F.
+Definition terminal_map_insert (A B : topos_of_trees) (F : topos_of_trees⟦terminal_topos_of_trees,A⟧) :
+  topos_of_trees⟦B,A⟧.
 Proof.
-  unfold compose.
-  simpl.
-  apply funextfun.
-  intro u.
-  destruct u.
-  apply idpath.
+  exact ((TerminalArrow terminal_topos_of_trees B)· F).
 Defined.
 
-Definition fix_hom_data (A : topos_of_trees) (F : topos_of_trees⟦(later A),A⟧) :
-  nat_trans_data (pr1 (pr1 terminal_topos_of_trees)) (pr1 A).
+Definition terminalHSET_eq (X : SET) (F : SET⟦TerminalHSET,X⟧) :
+  TerminalArrow TerminalHSET unitHSET · F = F.
 Proof.
- intro n.
- induction n as [|n Hn].
- + apply (pr1 F 0).
- + intro u.
-   apply (pr1 F (S n) (Hn u)).
+  rewrite <- id_left.
+  apply cancel_postcomposition.
+  apply TerminalArrowEq.
+Defined.
+
+Definition fix_hom_data (A : topos_of_trees) (F : topos_of_trees⟦later A, A⟧) :
+  ∏ n : ω^op, pr1 (TerminalObject terminal_topos_of_trees) n -->  pr1 A n.
+Proof.
+  induction n as [|n Hn].
+  - apply (pr1 F 0).
+  - apply (pr1 F (ω_succ n) ∘ Hn).
 Defined.
 
 Definition fix_hom (A : topos_of_trees) (F : topos_of_trees⟦(later A),A⟧) :
   topos_of_trees⟦terminal_topos_of_trees,A⟧.
 Proof.
   use mk_nat_trans.
-  - apply (fix_hom_data A F).
+  - exact (fix_hom_data A F).
   - intros n m f.
-    rewrite terminal_topos_of_trees_eq.
+    rewrite terminalHSET_eq.
     induction n as [|n Hn].
     + induction m as [|m Hm];[|inversion f].
       assert (H: f =  @identity ω^op 0);[apply po_homsets_isaprop|].
       rewrite H. rewrite functor_id.
       apply idpath.
     + induction m as [|m Hm].
-      * assert (H := (pr2 F (S n) 0 f)).
+      * simpl in Hn.
+        simpl. rewrite (Hn f).
         unfold functor_on_morphisms in *.
-        assert (H1 : fix_hom_data A F (S n) = fix_hom_data A F n · (pr1 F (S n)));[apply idpath|].
-        rewrite H1.
-        rewrite <- H.
+        unfold compose.
+        simpl.
+
+
+
+
+
+
+
+
 
 
 
