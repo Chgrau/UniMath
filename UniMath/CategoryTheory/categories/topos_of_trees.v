@@ -337,35 +337,33 @@ Definition fix_hom (A : topos_of_trees) (F : topos_of_trees⟦(later A),A⟧) :
 Proof.
   use mk_nat_trans.
   - exact (fix_hom_data A F).
-  - intros n m f.
-    rewrite terminalHSET_eq.
+  - intro n.
     induction n as [|n Hn].
-    + induction m as [|m Hm];[|inversion f].
+    + intros m f.
+      rewrite terminalHSET_eq.
+      destruct m as [|m];[|inversion f].
       assert (H: f =  @identity ω^op 0);[apply po_homsets_isaprop|].
-      rewrite H. rewrite functor_id.
+      rewrite H.
+      rewrite functor_id.
       apply idpath.
-    + induction m as [|m Hm].
-      * simpl in Hn.
-        simpl. rewrite (Hn f).
-        unfold functor_on_morphisms.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Definition
+    + intro m.
+      destruct m as [|m].
+      * intro f.
+        rewrite terminalHSET_eq.
+        refine (_ @ maponpaths (λ x, fix_hom_data A F n · x) (pr2 F (S n) 0 f)).
+        simpl.
+        assert (H1 : fix_hom_data A F n · TerminalArrow TerminalHSET ((pr1 A) n) = identity unitHSET).
+        -- use TerminalArrowEq.
+        -- refine (! (maponpaths (λ x,  x · pr1 F 0) H1 @ _)).
+           ++ apply id_left.
+      * intro f.
+        rewrite terminalHSET_eq.
+        assert (H1 : fix_hom_data A F m = fix_hom_data A F n · pr2 (pr1 A) n m f).
+        ++ refine (_ @ (Hn m f)).
+           rewrite terminalHSET_eq.
+           apply idpath.
+        ++ refine (_ @ maponpaths (λ x, fix_hom_data A F n · x) (pr2 F (S n) (S m) f)).
+           simpl.
+           rewrite H1.
+           apply idpath.
+Defined.
