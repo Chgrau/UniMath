@@ -58,18 +58,14 @@ End ToT_definition.
 
 Section Later.
 
-Lemma ω_map_succ : ∏(n m : ω^op), ω^op⟦ω_succ n, ω_succ m⟧ → ω^op⟦n, m⟧.
-Proof.
-  intros n m f.
-  exact f.
-Defined.
+Definition ω_map_succ (n m : ω^op)(f : ω^op⟦S n, S m⟧) : ω^op⟦n, m⟧ := f.
 
 Definition later_on_ob_on_ob (A : topos_of_trees) :  ω^op → SET.
 Proof.
   intros n.
   destruct n as [|n].
   - exact TerminalHSET.
-  - exact ((pr1 A) n).
+  - exact (pr1 A n).
 Defined.
 
 Definition later_on_ob_on_mor (A : topos_of_trees) :
@@ -78,10 +74,9 @@ Proof.
   intros n m f.
   destruct m as [| m].
   - apply (TerminalArrow TerminalHSET).
-  - destruct n as [| n].
-    + inversion f.
-    + apply ω_map_succ in f.
-      apply (#(pr1 A) f).
+  - destruct n as [| n];[inversion f|].
+    apply ω_map_succ in f.
+    apply (#(pr1 A) f).
 Defined.
 
 Definition later_on_ob_data (A : topos_of_trees) : functor_data (ω ^op) SET :=
@@ -102,12 +97,11 @@ Proof.
   - apply (TerminalArrowEq (TerminalArrow TerminalHSET (later_on_ob_on_ob A n))).
   - destruct m as [|m].
     + inversion g.
-    + destruct n as [|n].
-      * inversion f.
-      * simpl. unfold compose.
-        rewrite <- (functor_comp A).
-        apply maponpaths.
-        apply po_homsets_isaprop.
+    + destruct n as [|n];[inversion f|].
+      simpl. unfold compose.
+      rewrite <- (functor_comp A).
+      apply maponpaths.
+      apply po_homsets_isaprop.
 Defined.
 
 Definition later_on_ob_is_functor (A : topos_of_trees) : is_functor (later_on_ob_data A) :=
@@ -325,45 +319,52 @@ Proof.
 Defined.
 
 Definition fix_hom_data (A : topos_of_trees) (F : topos_of_trees⟦later A, A⟧) :
-  ∏ n : ω^op, pr1 (TerminalObject terminal_topos_of_trees) n -->  pr1 A n.
+  nat_trans_data (pr1 (TerminalObject terminal_topos_of_trees)) (pr1 A).
 Proof.
+  intro n.
   induction n as [|n Hn].
   - apply (pr1 F 0).
-  - apply (pr1 F (ω_succ n) ∘ Hn).
+  - apply (pr1 F (S n) ∘ Hn).
 Defined.
 
-Definition fix_hom (A : topos_of_trees) (F : topos_of_trees⟦(later A),A⟧) :
-  topos_of_trees⟦terminal_topos_of_trees,A⟧.
+Check is_nat_trans.
+Definition ω_0 : ω^op := 0.
+
+Definition fix_hom_is_nat_trans (A : topos_of_trees) (F : topos_of_trees⟦later A,A⟧) :
+  is_nat_trans (pr1 (TerminalObject terminal_topos_of_trees)) (pr1 A) (fix_hom_data A F).
 Proof.
-  use mk_nat_trans.
-  - exact (fix_hom_data A F).
-  - intro n.
-    induction n as [|n Hn].
-    + intros m f.
-      rewrite terminalHSET_eq.
-      destruct m as [|m];[|inversion f].
-      assert (H: f =  @identity ω^op 0);[apply po_homsets_isaprop|].
-      rewrite H.
-      rewrite functor_id.
-      apply idpath.
-    + intro m.
-      destruct m as [|m].
-      * intro f.
-        rewrite terminalHSET_eq.
-        refine (_ @ maponpaths (λ x, fix_hom_data A F n · x) (pr2 F (S n) 0 f)).
+  intros n m f.
+  rewrite terminalHSET_eq.
+  generalize dependent m.
+  induction n as [|n Hn].
+  - intros m f.
+    destruct m as [|m];[|inversion f].
+    assert (Hid: f = (@identity ω^op 0));[apply po_homsets_isaprop|].
+    rewrite Hid; rewrite (functor_id A); apply idpath.
+  - intro m.
+    destruct m as [|m].
+    + intro f.
+      refine (_ @ maponpaths (λ x, fix_hom_data A F n · x) (pr2 F (S n) 0 f)).
+      assert (H1 : fix_hom_data A F n · TerminalArrow TerminalHSET ((pr1 A) n) = identity unitHSET).
+      * use TerminalArrowEq.
+      * refine (! (maponpaths (λ x,  x · pr1 F 0) H1 @ _)).
+        apply id_left.
+    + intro f.
+      assert (H1 : fix_hom_data A F m = fix_hom_data A F n · pr2 (pr1 A) n m f).
+      * refine (_ @ (Hn m f)).
+        apply idpath.
+      * refine (_ @ maponpaths (λ x, fix_hom_data A F n · x) (pr2 F (S n) (S m) f)).
         simpl.
-        assert (H1 : fix_hom_data A F n · TerminalArrow TerminalHSET ((pr1 A) n) = identity unitHSET).
-        -- use TerminalArrowEq.
-        -- refine (! (maponpaths (λ x,  x · pr1 F 0) H1 @ _)).
-           ++ apply id_left.
-      * intro f.
-        rewrite terminalHSET_eq.
-        assert (H1 : fix_hom_data A F m = fix_hom_data A F n · pr2 (pr1 A) n m f).
-        ++ refine (_ @ (Hn m f)).
-           rewrite terminalHSET_eq.
-           apply idpath.
-        ++ refine (_ @ maponpaths (λ x, fix_hom_data A F n · x) (pr2 F (S n) (S m) f)).
-           simpl.
-           rewrite H1.
-           apply idpath.
+        rewrite H1.
+        apply idpath.
 Defined.
+
+Check mk_nat_trans.
+
+Definition fix_hom (A : topos_of_trees) (F : topos_of_trees⟦(later A),A⟧) :
+  topos_of_trees⟦terminal_topos_of_trees,A⟧ :=
+  mk_nat_trans (pr1 (TerminalObject terminal_topos_of_trees))
+               (pr1 A)
+               (fix_hom_data A F) (fix_hom_is_nat_trans A F).
+
+End Fix.
